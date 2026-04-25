@@ -1,5 +1,16 @@
+window.escapeHTML = (str) => {
+    return str.replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+    }[tag] || tag));
+};
+
 window.parseMarkdown = (text) => {
-    let html = text;
+    // SECURITY: Sanitize input first to prevent XSS
+    let html = window.escapeHTML(text);
     
     // Bold
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');

@@ -49,10 +49,20 @@ loginBtn.addEventListener('click', async (e) => {
     e.preventDefault();
     try {
         authError.textContent = "Logging in...";
-        if (!emailInput.value || !passwordInput.value) {
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        
+        if (!email || !password) {
             throw new Error("Please enter both email and password.");
         }
-        await window.loginUser(emailInput.value, passwordInput.value);
+        
+        // Security Validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            throw new Error("Please enter a valid email format.");
+        }
+
+        await window.loginUser(email, password);
     } catch (error) {
         authError.textContent = error.message;
     }
@@ -62,10 +72,23 @@ signupBtn.addEventListener('click', async (e) => {
     e.preventDefault();
     try {
         authError.textContent = "Creating account...";
-        if (!emailInput.value || !passwordInput.value) {
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+
+        if (!email || !password) {
             throw new Error("Please enter both email and password.");
         }
-        await window.registerUser(emailInput.value, passwordInput.value);
+        
+        // Security Validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            throw new Error("Please enter a valid email format.");
+        }
+        if (password.length < 8) {
+            throw new Error("Password must be at least 8 characters long.");
+        }
+
+        await window.registerUser(email, password);
     } catch (error) {
         authError.textContent = error.message;
     }
