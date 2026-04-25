@@ -54,20 +54,4 @@ describe('LearnNova App functionality', () => {
     });
 });
 
-// Polyfill for expect in a simple run
-function expect(value) {
-    return {
-        toBe: (expected) => {
-            if (value !== expected) {
-                console.error(`Test failed: Expected ${expected}, got ${value}`);
-            }
-        },
-        not: {
-            toBe: (expected) => {
-                if (value === expected) {
-                    console.error(`Test failed: Expected not to be ${expected}`);
-                }
-            }
-        }
-    };
-}
+
