@@ -96,6 +96,7 @@ h1, h2, h3 {
     font-size: 3.5rem;
     font-weight: 800;
     background: linear-gradient(to right, #60a5fa, #34d399);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 10px;
