@@ -5,107 +5,173 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CivicVote - Election Process Education</title>
-    <meta name="description"
-        content="An intelligent assistant that helps you understand the election process, timelines, and steps.">
+    <meta name="description" content="An intelligent, non-partisan assistant that helps you understand the election process, timelines, and steps in an interactive and easy-to-follow way.">
+    <meta name="theme-color" content="#0a1628">
 
-    <!-- Google Analytics Integration -->
+    <!-- Google Analytics (GA4) — Google Service Integration -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-CIVICVOTE1"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
-        gtag('config', 'G-LEARNNOVA1');
+        gtag('config', 'G-CIVICVOTE1', { anonymize_ip: true });
     </script>
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts — Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
 
+    <!-- Styles -->
     <link rel="preload" href="css/style.css" as="style">
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-    <main id="app" class="app-container" role="main">
-        <!-- Auth Section -->
-        <section id="auth-section" class="glass-panel active">
-            <h1 class="brand-title">LearnNova</h1>
-            <p class="subtitle">Your Personalized AI Tutor</p>
-            <div class="auth-form">
-                <input type="email" id="email" placeholder="Email Address" aria-label="Email Address" required>
-                <input type="password" id="password" placeholder="Password" aria-label="Password" required>
-                <button id="login-btn" class="primary-btn">Sign In</button>
-                <button id="signup-btn" class="secondary-btn">Create Account</button>
-                <p id="auth-error" class="error-msg"></p>
-            </div>
+    <main id="app" class="app-container" role="main" aria-label="CivicVote Election Education App">
+
+        <!-- ── Auth Section ── -->
+        <section id="auth-section" class="glass-panel active" aria-labelledby="brand-heading">
+            <span class="civic-icon" role="img" aria-label="Ballot box">🗳️</span>
+            <h1 class="brand-title" id="brand-heading">CivicVote</h1>
+            <p class="subtitle">Your Non-Partisan Guide to the Election Process</p>
+
+            <form class="auth-form" aria-label="Sign in or create an account" novalidate>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Email Address"
+                    aria-label="Email Address"
+                    autocomplete="email"
+                    required>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Password (min. 8 characters)"
+                    aria-label="Password"
+                    autocomplete="current-password"
+                    minlength="8"
+                    required>
+                <button id="login-btn" class="primary-btn" type="button">Sign In</button>
+                <button id="signup-btn" class="secondary-btn" type="button">Create Account</button>
+                <p id="auth-error" class="error-msg" role="alert" aria-live="polite"></p>
+            </form>
         </section>
 
-        <!-- Dashboard Section -->
-        <section id="dashboard-section" class="glass-panel hidden">
+        <!-- ── Dashboard Section ── -->
+        <section id="dashboard-section" class="glass-panel hidden" aria-labelledby="welcome-heading">
             <header class="app-header">
-                <h2>Welcome, <span id="user-display-name">Student</span></h2>
-                <button id="logout-btn" class="text-btn">Logout</button>
+                <h2 id="welcome-heading">Welcome, <span id="user-display-name">Voter</span> 👋</h2>
+                <button id="logout-btn" class="text-btn" aria-label="Sign out of CivicVote">Logout</button>
             </header>
 
             <div class="dashboard-content">
-                <div class="card current-topic">
-                    <h3>What do you want to learn today?</h3>
+
+                <!-- Topic Selection -->
+                <div class="card current-topic" role="region" aria-labelledby="topic-heading">
+                    <h3 id="topic-heading">🏛️ Learn About the Election Process</h3>
+                    <p>Select a topic and start an interactive session with your civic guide.</p>
                     <div class="topic-input-group">
-                        <input type="text" id="topic-input" placeholder="e.g. Quantum Physics, Python, World History"
-                            aria-label="Enter a topic to learn">
-                        <button id="start-learning-btn" class="primary-btn">Start Learning</button>
+                        <select id="topic-input" aria-label="Select an election topic to explore">
+                            <option value="Voter Registration">📋 Voter Registration</option>
+                            <option value="Election Timelines & Key Deadlines">📅 Election Timelines &amp; Key Deadlines</option>
+                            <option value="How to Vote In-Person">🏢 How to Vote In-Person</option>
+                            <option value="Mail-In and Absentee Voting">✉️ Mail-In &amp; Absentee Voting</option>
+                            <option value="Electoral College Explained">🎓 Electoral College Explained</option>
+                            <option value="Local vs National Elections">🌆 Local vs National Elections</option>
+                            <option value="Vote Counting and Certification">📊 Vote Counting &amp; Certification</option>
+                        </select>
+                        <button id="start-learning-btn" class="primary-btn" aria-label="Start election education session">
+                            Start Session
+                        </button>
                     </div>
                 </div>
 
-                <div class="card stats">
-                    <h3>Your Progress</h3>
+                <!-- Document Verification — Firebase Storage -->
+                <div class="card document-upload" role="region" aria-labelledby="doc-heading">
+                    <h3 id="doc-heading">🔐 Voter Profile Verification</h3>
+                    <p>Upload a sample ID document to simulate secure voter profile verification via Firebase Storage.</p>
+                    <input
+                        type="file"
+                        id="id-upload"
+                        accept="image/*,application/pdf"
+                        aria-label="Choose an ID document to upload"
+                        aria-describedby="upload-status">
+                    <button id="upload-doc-btn" class="secondary-btn" aria-label="Upload your ID document">
+                        Upload &amp; Verify
+                    </button>
+                    <p id="upload-status" class="status-msg" role="status" aria-live="polite"></p>
+                </div>
+
+                <!-- Progress Stats -->
+                <div class="card stats" role="region" aria-labelledby="progress-heading">
+                    <h3 id="progress-heading">📈 Your Civic Progress</h3>
                     <div class="stats-grid">
                         <div class="stat-item">
-                            <span class="stat-value" id="topics-completed">0</span>
-                            <span class="stat-label">Topics</span>
+                            <span class="stat-value" id="topics-completed" aria-label="Topics completed">0</span>
+                            <span class="stat-label">Topics Completed</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-value" id="current-level">Beginner</span>
-                            <span class="stat-label">Level</span>
+                            <span class="stat-value" id="current-level" aria-label="Current voter level">Voter</span>
+                            <span class="stat-label">Civic Level</span>
                         </div>
                     </div>
                 </div>
+
             </div>
         </section>
 
-        <!-- Learning Session Section -->
-        <section id="learning-section" class="glass-panel hidden">
+        <!-- ── Learning Session Section ── -->
+        <section id="learning-section" class="glass-panel hidden" aria-labelledby="topic-title">
             <header class="app-header">
-                <button id="back-to-dashboard-btn" class="icon-btn">← Back</button>
-                <h2 id="current-topic-title">Topic</h2>
-                <div class="level-indicator" id="session-level">Beginner</div>
+                <button id="back-to-dashboard-btn" class="icon-btn" aria-label="Return to dashboard">
+                    ← Back
+                </button>
+                <h2 id="topic-title" aria-live="polite">Topic</h2>
+                <div class="level-indicator" id="session-level" aria-label="Current civic level">Voter</div>
             </header>
 
-            <div class="chat-container" id="chat-container" aria-live="polite" role="log">
-                <!-- Chat messages will be injected here -->
+            <div
+                class="chat-container"
+                id="chat-container"
+                role="log"
+                aria-live="polite"
+                aria-label="Election education chat conversation"
+                aria-relevant="additions">
+                <!-- Chat messages injected here by ui.js -->
             </div>
 
-            <div class="input-area">
-                <textarea id="user-response" placeholder="Ask a question or answer the tutor..."
-                    aria-label="Type your message here"></textarea>
-                <button id="send-msg-btn" class="primary-btn">Send</button>
+            <div class="input-area" role="form" aria-label="Send a message">
+                <textarea
+                    id="user-response"
+                    placeholder="Ask your question about the election process..."
+                    aria-label="Type your message here"
+                    aria-multiline="true"
+                    rows="2"></textarea>
+                <button id="send-msg-btn" class="primary-btn" aria-label="Send your message">
+                    Send
+                </button>
             </div>
         </section>
+
     </main>
 
-    <!-- Firebase SDKs Compat version to allow running directly from file system (no modules needed) -->
+    <!-- ── Firebase SDKs (CDN Compat — works without a build step) ── -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 
-    <!-- Local Scripts without type="module" -->
-    <script src="js/firebase-config.js?v=3" defer></script>
-    <script src="js/gemini-api.js?v=3" defer></script>
-    <script src="js/ui.js?v=3" defer></script>
-    <script src="js/app.js?v=3" defer></script>
+    <!-- ── Application Scripts ── -->
+    <script src="js/analytics.js?v=1" defer></script>
+    <script src="js/timeline.js?v=1" defer></script>
+    <script src="js/firebase-config.js?v=5" defer></script>
+    <script src="js/gemini-api.js?v=5" defer></script>
+    <script src="js/ui.js?v=5" defer></script>
+    <script src="js/app.js?v=5" defer></script>
+
 </body>
 
 </html>
