@@ -1,112 +1,155 @@
-const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY";
+/**
+ * gemini-api.js — Google Gemini 2.5 Flash Integration for CivicVote.
+ *
+ * This module handles communication with the Google Generative AI API.
+ * It enforces a non-partisan, educational persona focused on election processes.
+ *
+ * Google Service Used: Gemini 2.5 Flash API
+ *
+ * @module gemini
+ */
+
+'use strict';
+
+/**
+ * @constant {string} GEMINI_API_KEY - API Key for Google Gemini.
+ * Note: Should be replaced with a real key for production deployment.
+ */
+const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY';
+
+/**
+ * @constant {string} API_URL - Endpoint for the Gemini API.
+ */
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 /**
- * Builds the system prompt for CivicVote — strictly non-partisan,
- * election-process focused, adapting tone to voter level.
- * @param {string} topic - The election topic being discussed.
- * @param {string} level - The user's voter readiness level.
- * @returns {string} System prompt string.
+ * Generates the system instruction prompt for the AI assistant.
+ * Enforces strict non-partisanship and vertical alignment with Election Process Education.
+ *
+ * @param {string} topic - The current election topic.
+ * @param {string} level - The user's civic knowledge level ('Voter' or 'Verified Voter').
+ * @returns {string} The formatted system prompt.
  */
-const getSystemPrompt = (topic, level) => `
-You are CivicVote, an intelligent, patient, and strictly non-partisan election process education assistant.
-The user wants to learn about: "${topic}".
-Their current civic readiness level is: "${level}".
+const buildSystemPrompt = (topic, level) => {
+    return `
+You are CivicVote, an expert, patient, and strictly non-partisan Election Process Education assistant.
+Your goal is to educate users on the mechanics of voting and democracy for: "${topic}".
+User's Civic Readiness Level: "${level}".
 
-Guidelines:
-1. Always maintain a neutral, non-partisan tone. Never express opinion on political parties or candidates.
-2. Adapt language and complexity to match their level:
-   - Voter (Beginner): Use plain language, step-by-step instructions, no legal jargon.
-   - Verified Voter (Intermediate): Introduce nuances like state vs. federal rules, deadlines, ID laws.
-3. Focus strictly on process: registration, deadlines, how to vote, vote counting, results.
-4. Always end with one clear question to confirm understanding or to explore the next step.
-5. Format your response using Markdown: bold key terms, use numbered or bulleted lists for steps.
-6. If asked about political opinions, redirect: "As a civic guide, I focus only on the process — not political parties or candidates."
-`;
+CORE DIRECTIVES:
+1. STRICT NON-PARTISANSHIP: Never express opinions on political parties, candidates, or ideologies.
+2. VERTICAL FOCUS: Strictly discuss election processes (registration, deadlines, logistics, mechanics).
+3. PACING: Adapt your complexity.
+   - Voter: Use clear, simple language; explain terms like "absentee" or "canvassing".
+   - Verified Voter: Provide more detailed information on state vs federal rules or security protocols.
+4. STRUCTURE: Use Markdown. Bold key terms. Use lists for steps.
+5. ENGAGEMENT: Always end with exactly one question to verify understanding or prompt the next logical step.
+6. BOUNDARIES: If asked about political preferences, state: "As a non-partisan civic guide, I focus on how the election process works, not on candidates or parties."
+
+Topic Context: ${topic}.
+Current Level: ${level}.
+`.trim();
+};
 
 /**
- * Sends a prompt to the Google Gemini API and returns the text response.
- * Falls back to a mock response if the API key is not configured.
+ * Communicates with the Google Gemini API to get a structured response.
+ * Implements safety settings and handles fallback/error states.
+ *
+ * @async
+ * @function getGeminiResponse
  * @param {string} topic - The current election topic.
- * @param {string} level - The user's voter readiness level.
- * @param {string|null} userMessage - The user's latest message.
- * @param {Array} chatHistory - Prior conversation turns.
- * @returns {Promise<string>} The assistant's response text.
+ * @param {string} level - User's current civic level.
+ * @param {string|null} userMessage - The latest message from the user.
+ * @param {Array<{role: string, text: string}>} [history=[]] - Conversation history.
+ * @returns {Promise<string>} The assistant's text response.
  */
-window.getGeminiResponse = async (topic, level, userMessage, chatHistory = []) => {
-    // Track the API call with Google Analytics
+window.getGeminiResponse = async (topic, level, userMessage, history = []) => {
+    // Analytics tracking for API usage
     if (typeof window.trackEvent === 'function') {
         window.trackEvent('gemini_api_call', { topic, level });
     }
 
-    if (GEMINI_API_KEY === "YOUR_GEMINI_API_KEY") {
-        // Graceful mock fallback — still demonstrates the full flow
-        return new Promise(resolve => {
+    // Mock implementation for demonstration if API key is missing
+    if (GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY') {
+        return new Promise((resolve) => {
             setTimeout(() => {
-                const mock = userMessage
-                    ? `**[Mock Mode]** You asked: "${userMessage}" about **${topic}**.\n\nIn a real session, I would give you a detailed, non-partisan explanation. For now:\n\n- **Step 1:** Check your state's voter registration deadline.\n- **Step 2:** Locate your polling place at vote.gov.\n- **Step 3:** Bring valid ID on election day.\n\nDo you have a specific question about **${topic}**?`
-                    : `**Welcome to CivicVote!** 🗳️\n\nYou've selected **${topic}**. Here's a quick overview:\n\n- This topic covers important steps every voter should know.\n- I'll guide you through the process clearly and without bias.\n\nWhat would you like to know first about **${topic}**?`;
-                resolve(mock);
-            }, 1200);
+                const mockText = userMessage
+                    ? `[DEMO MODE] Regarding **${topic}**, you asked: "${userMessage}". In a live session, I would provide a non-partisan explanation based on your ${level} status. Please register at vote.gov by your state's deadline. What else can I help you with?`
+                    : `Welcome to **CivicVote**! I am here to guide you through **${topic}**. Where would you like to start?`;
+                resolve(mockText);
+            }, 1000);
         });
     }
 
     try {
-        // Build conversation for Gemini multi-turn format
         const contents = [
-            { role: "user",  parts: [{ text: getSystemPrompt(topic, level) }] },
-            { role: "model", parts: [{ text: "Understood. I am CivicVote — your non-partisan guide to the election process." }] }
+            {
+                role: 'user',
+                parts: [{ text: buildSystemPrompt(topic, level) }]
+            },
+            {
+                role: 'model',
+                parts: [{ text: 'Understood. I am your expert guide to the Election Process.' }]
+            }
         ];
 
-        chatHistory.forEach(msg => {
+        // Format history for Gemini API
+        history.forEach((msg) => {
             contents.push({
                 role: msg.role === 'bot' ? 'model' : 'user',
                 parts: [{ text: msg.text }]
             });
         });
 
-        contents.push({
-            role: "user",
-            parts: [{ text: userMessage || `Please introduce me to the topic: ${topic}` }]
-        });
+        // Add the current prompt
+        if (userMessage) {
+            contents.push({
+                role: 'user',
+                parts: [{ text: userMessage }]
+            });
+        } else {
+            contents.push({
+                role: 'user',
+                parts: [{ text: `Hello, please introduce the topic of ${topic}.` }]
+            });
+        }
 
         const response = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents,
                 generationConfig: {
-                    temperature: 0.3,      // Lower temp = more factual, less creative
-                    maxOutputTokens: 900,
+                    temperature: 0.25, // Lower temperature for more factual consistency
+                    maxOutputTokens: 1024,
                     topP: 0.9
                 },
                 safetySettings: [
-                    { category: "HARM_CATEGORY_HATE_SPEECH",       threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                    { category: "HARM_CATEGORY_HARASSMENT",        threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
+                    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
+                    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
+                    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_ONLY_HIGH' }
                 ]
             })
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            throw new Error(`Gemini API HTTP ${response.status}`);
         }
 
         const data = await response.json();
 
         if (data.error) {
-            throw new Error(data.error.message || "Unknown Gemini API error");
+            throw new Error(data.error.message || 'Gemini API Internal Error');
         }
 
-        return data.candidates?.[0]?.content?.parts?.[0]?.text
-            ?? "I received an empty response. Please try again.";
+        const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        return aiText || 'I am sorry, I could not generate a response. Please try again.';
 
     } catch (error) {
-        console.error("Gemini API Error:", error);
-        // Track error in Google Analytics
+        console.error('Gemini API Error:', error);
         if (typeof window.trackEvent === 'function') {
             window.trackEvent('gemini_api_error', { error: error.message });
         }
-        return `I'm having trouble connecting right now. Please check your API key or network connection. _(Error: ${error.message})_`;
+        return `My civic guidance system is temporarily unavailable. Error: ${error.message}`;
     }
 };

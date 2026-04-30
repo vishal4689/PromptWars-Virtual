@@ -1,295 +1,336 @@
 /**
- * app.js — CivicVote main application controller.
+ * app.js — CivicVote Main Application Controller.
  *
- * Orchestrates authentication, document upload, and learning session flows.
- * Integrates with:
- *   - Firebase Auth (login / register / logout)
- *   - Firebase Firestore (user progress persistence)
- *   - Firebase Storage (document upload via firebase-config.js)
- *   - Google Gemini API (AI-driven election guidance)
- *   - Google Analytics (event tracking via analytics.js)
+ * This module orchestrates the interaction between the UI, Firebase services,
+ * and the Google Gemini AI. It manages the application state, including
+ * user authentication and civic progress tracking.
+ *
+ * @module app
  */
 
 'use strict';
 
-// ── App State ──────────────────────────────────────────────────────────────────
-let currentUser    = null;
-let userProgress   = null;
-let currentTopic   = '';
-let chatHistory    = [];
+/**
+ * @namespace State
+ * @description Internal application state tracking.
+ */
+const State = {
+    currentUser: null,
+    userProgress: {
+        topicsCompleted: 0,
+        level: 'Voter',
+        history: []
+    },
+    currentTopic: '',
+    chatHistory: [],
+    isProcessing: false
+};
 
 // ── DOM References ─────────────────────────────────────────────────────────────
-const loginBtn          = document.getElementById('login-btn');
-const signupBtn         = document.getElementById('signup-btn');
-const logoutBtn         = document.getElementById('logout-btn');
-const emailInput        = document.getElementById('email');
-const passwordInput     = document.getElementById('password');
-const authError         = document.getElementById('auth-error');
 
-const userDisplayName   = document.getElementById('user-display-name');
-const topicsCompleted   = document.getElementById('topics-completed');
-const currentLevelEl    = document.getElementById('current-level');
+const DOM = {
+    loginBtn:           document.getElementById('login-btn'),
+    signupBtn:          document.getElementById('signup-btn'),
+    logoutBtn:          document.getElementById('logout-btn'),
+    emailInput:         document.getElementById('email'),
+    passwordInput:      document.getElementById('password'),
+    authError:          document.getElementById('auth-error'),
 
-const topicInput        = document.getElementById('topic-input');
-const startLearningBtn  = document.getElementById('start-learning-btn');
-const backToDashboardBtn= document.getElementById('back-to-dashboard-btn');
+    userDisplayName:    document.getElementById('user-display-name'),
+    topicsCompleted:    document.getElementById('topics-completed'),
+    currentLevelEl:     document.getElementById('current-level'),
 
-const currentTopicTitle = document.getElementById('topic-title');
-const sessionLevelEl    = document.getElementById('session-level');
-const chatContainer     = document.getElementById('chat-container');
-const userResponse      = document.getElementById('user-response');
-const sendMsgBtn        = document.getElementById('send-msg-btn');
+    topicInput:         document.getElementById('topic-input'),
+    startLearningBtn:   document.getElementById('start-learning-btn'),
+    backToDashboardBtn: document.getElementById('back-to-dashboard-btn'),
 
-const uploadDocBtn      = document.getElementById('upload-doc-btn');
-const idUpload          = document.getElementById('id-upload');
-const uploadStatus      = document.getElementById('upload-status');
+    currentTopicTitle:  document.getElementById('topic-title'),
+    sessionLevelEl:     document.getElementById('session-level'),
+    chatContainer:      document.getElementById('chat-container'),
+    userResponse:       document.getElementById('user-response'),
+    sendMsgBtn:         document.getElementById('send-msg-btn'),
+
+    uploadDocBtn:       document.getElementById('upload-doc-btn'),
+    idUpload:           document.getElementById('id-upload'),
+    uploadStatus:       document.getElementById('upload-status')
+};
 
 // ── Validation Helpers ─────────────────────────────────────────────────────────
 
 /**
- * Validates an email address format.
- * @param {string} email
- * @returns {boolean}
+ * Validates the format of an email address.
+ * @param {string} email - The email string to validate.
+ * @returns {boolean} True if valid.
  */
-const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const validateEmailFormat = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
 
 /**
- * Validates a password meets the minimum length requirement.
- * @param {string} password
- * @returns {boolean}
+ * Validates password strength (minimum 8 characters).
+ * @param {string} password - The password string.
+ * @returns {boolean} True if meets minimum requirements.
  */
-const isValidPassword = (password) => typeof password === 'string' && password.length >= 8;
+const validatePasswordStrength = (password) => {
+    return typeof password === 'string' && password.length >= 8;
+};
 
-// ── Auth State Listener ────────────────────────────────────────────────────────
+// ── Authentication Flow ────────────────────────────────────────────────────────
 
-window.listenToAuthStatus(async (user) => {
-    if (user) {
-        currentUser = user;
-        // Display first part of email as name
-        userDisplayName.textContent = user.email.split('@')[0];
+/**
+ * Handles authentication state changes from Firebase.
+ * Updates the UI and internal state when a user logs in or out.
+ *
+ * @param {Object|null} user - The Firebase user object.
+ */
+const handleAuthStateChange = async (user) => {
+    try {
+        if (user) {
+            State.currentUser = user;
+            DOM.userDisplayName.textContent = user.email.split('@')[0];
 
-        // Load progress from Firestore (or mock)
-        userProgress = await window.getUserProgress(user.uid);
-        topicsCompleted.textContent = userProgress.topicsCompleted || 0;
-        currentLevelEl.textContent  = userProgress.level || 'Voter';
+            // Load progress from Firestore (or mock implementation)
+            const progress = await window.getUserProgress(user.uid);
+            State.userProgress = { ...State.userProgress, ...progress };
 
-        window.showSection('dashboard-section');
-    } else {
-        currentUser  = null;
-        userProgress = null;
-        window.showSection('auth-section');
+            // Update Dashboard stats
+            DOM.topicsCompleted.textContent = State.userProgress.topicsCompleted;
+            DOM.currentLevelEl.textContent  = State.userProgress.level;
+
+            window.showSection('dashboard-section');
+        } else {
+            State.currentUser = null;
+            window.showSection('auth-section');
+        }
+    } catch (error) {
+        console.error('Auth State Sync Error:', error);
+        window.showToast('Error syncing user data.', 'error');
     }
-});
+};
 
-// ── Login ──────────────────────────────────────────────────────────────────────
+window.listenToAuthStatus(handleAuthStateChange);
 
-loginBtn.addEventListener('click', async () => {
-    authError.textContent = '';
-    const email    = emailInput.value.trim();
-    const password = passwordInput.value;
+/**
+ * Executes a login attempt.
+ */
+const onLogin = async () => {
+    const email = DOM.emailInput.value.trim();
+    const password = DOM.passwordInput.value;
 
     try {
-        if (!email || !password) throw new Error('Please enter both email and password.');
-        if (!isValidEmail(email))    throw new Error('Please enter a valid email address.');
+        if (!email || !password) {
+            throw new Error('All fields are required.');
+        }
+        if (!validateEmailFormat(email)) {
+            throw new Error('Please enter a valid email address.');
+        }
 
-        authError.textContent = 'Signing in…';
+        DOM.authError.textContent = 'Authenticating...';
         await window.loginUser(email, password);
 
-        // Track successful login
-        if (typeof window.trackAuth === 'function') window.trackAuth('login');
-
+        if (typeof window.trackAuth === 'function') {
+            window.trackAuth('login');
+        }
     } catch (error) {
-        authError.textContent = error.message;
+        DOM.authError.textContent = error.message;
     }
-});
+};
 
-// ── Register ───────────────────────────────────────────────────────────────────
-
-signupBtn.addEventListener('click', async () => {
-    authError.textContent = '';
-    const email    = emailInput.value.trim();
-    const password = passwordInput.value;
+/**
+ * Executes a registration attempt.
+ */
+const onSignup = async () => {
+    const email = DOM.emailInput.value.trim();
+    const password = DOM.passwordInput.value;
 
     try {
-        if (!email || !password) throw new Error('Please enter both email and password.');
-        if (!isValidEmail(email))     throw new Error('Please enter a valid email address.');
-        if (!isValidPassword(password)) throw new Error('Password must be at least 8 characters long.');
+        if (!email || !password) {
+            throw new Error('All fields are required.');
+        }
+        if (!validateEmailFormat(email)) {
+            throw new Error('Please enter a valid email address.');
+        }
+        if (!validatePasswordStrength(password)) {
+            throw new Error('Password must be at least 8 characters.');
+        }
 
-        authError.textContent = 'Creating account…';
+        DOM.authError.textContent = 'Creating account...';
         await window.registerUser(email, password);
 
-        // Track successful registration
-        if (typeof window.trackAuth === 'function') window.trackAuth('register');
-
+        if (typeof window.trackAuth === 'function') {
+            window.trackAuth('register');
+        }
     } catch (error) {
-        authError.textContent = error.message;
+        DOM.authError.textContent = error.message;
     }
-});
+};
 
-// ── Logout ─────────────────────────────────────────────────────────────────────
+DOM.loginBtn?.addEventListener('click', onLogin);
+DOM.signupBtn?.addEventListener('click', onSignup);
+DOM.logoutBtn?.addEventListener('click', () => window.logoutUser());
 
-logoutBtn.addEventListener('click', async () => {
-    await window.logoutUser();
-    if (typeof window.showToast === 'function') {
-        window.showToast('You have been signed out.', 'info');
-    }
-});
+// ── Document Verification ──────────────────────────────────────────────────────
 
-// ── Document Upload (Firebase Storage) ────────────────────────────────────────
-
-uploadDocBtn.addEventListener('click', async () => {
-    const file = idUpload.files[0];
-
+/**
+ * Handles the voter ID document upload and verification simulation.
+ */
+const onUploadDocument = async () => {
+    const file = DOM.idUpload.files[0];
     if (!file) {
-        uploadStatus.textContent = 'Please select a file first.';
-        uploadStatus.style.color = 'var(--error)';
+        DOM.uploadStatus.textContent = 'No file selected.';
         return;
     }
 
-    // Security: Validate file type on the client side
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+    // Client-side security checks
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
-        uploadStatus.textContent = 'Invalid file type. Please upload an image or PDF.';
-        uploadStatus.style.color = 'var(--error)';
+        window.showToast('Unsupported file format.', 'error');
         return;
     }
 
-    // Security: Limit file size to 5 MB
-    const MAX_SIZE_MB = 5;
-    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-        uploadStatus.textContent = `File too large. Please upload a file smaller than ${MAX_SIZE_MB} MB.`;
-        uploadStatus.style.color = 'var(--error)';
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_SIZE) {
+        window.showToast('File size exceeds 5MB limit.', 'error');
         return;
-    }
-
-    uploadStatus.textContent = '⏳ Uploading to secure Firebase Storage…';
-    uploadStatus.style.color = 'var(--text-muted)';
-    uploadDocBtn.disabled    = true;
-
-    // Track upload attempt with Google Analytics
-    if (typeof window.trackDocumentUpload === 'function') {
-        window.trackDocumentUpload(file.type);
     }
 
     try {
-        await window.uploadUserDocument(currentUser.uid, file);
+        DOM.uploadStatus.textContent = 'Uploading to secure storage...';
+        DOM.uploadDocBtn.disabled = true;
 
-        uploadStatus.textContent = '✅ Document verified and stored securely!';
-        uploadStatus.style.color = 'var(--success)';
-
-        // Upgrade voter level
-        userProgress.level      = 'Verified Voter';
-        currentLevelEl.textContent = userProgress.level;
-        await window.saveUserProgress(currentUser.uid, userProgress);
-
-        if (typeof window.showToast === 'function') {
-            window.showToast('Voter profile verified! 🎉', 'success');
+        if (typeof window.trackDocumentUpload === 'function') {
+            window.trackDocumentUpload(file.type);
         }
 
+        await window.uploadUserDocument(State.currentUser.uid, file);
+
+        // Update progress on success
+        State.userProgress.level = 'Verified Voter';
+        DOM.currentLevelEl.textContent = State.userProgress.level;
+        await window.saveUserProgress(State.currentUser.uid, State.userProgress);
+
+        DOM.uploadStatus.textContent = 'Verification complete!';
+        window.showToast('Voter profile verified!', 'success');
     } catch (error) {
-        uploadStatus.textContent = `❌ Upload failed: ${error.message}`;
-        uploadStatus.style.color = 'var(--error)';
-        if (typeof window.showToast === 'function') {
-            window.showToast('Upload failed. Please try again.', 'error');
-        }
+        DOM.uploadStatus.textContent = 'Upload failed.';
+        window.showToast(error.message, 'error');
     } finally {
-        uploadDocBtn.disabled = false;
-        idUpload.value        = '';
+        DOM.uploadDocBtn.disabled = false;
+        DOM.idUpload.value = '';
     }
-});
+};
 
-// ── Start Learning Session ─────────────────────────────────────────────────────
+DOM.uploadDocBtn?.addEventListener('click', onUploadDocument);
 
-startLearningBtn.addEventListener('click', async () => {
-    const topic = topicInput.value.trim();
-    if (!topic) return;
+// ── Learning Session Flow ──────────────────────────────────────────────────────
 
-    currentTopic = topic;
-    currentTopicTitle.textContent = topic;
-    sessionLevelEl.textContent    = userProgress?.level || 'Voter';
+/**
+ * Initiates an AI-driven learning session for the selected topic.
+ */
+const onStartSession = async () => {
+    const topic = DOM.topicInput.value;
+    if (!topic || State.isProcessing) {
+        return;
+    }
 
-    // Reset chat state
-    chatContainer.innerHTML = '';
-    chatHistory             = [];
-    userResponse.value      = '';
+    State.currentTopic = topic;
+    State.chatHistory = [];
+    DOM.chatContainer.innerHTML = '';
+    DOM.currentTopicTitle.textContent = topic;
+    DOM.sessionLevelEl.textContent = State.userProgress.level;
 
     window.showSection('learning-section');
 
-    // Track topic session start with Google Analytics
     if (typeof window.trackTopicStart === 'function') {
-        window.trackTopicStart(topic, userProgress?.level || 'Voter');
+        window.trackTopicStart(topic, State.userProgress.level);
     }
 
-    // Initial AI greeting
-    window.showTypingIndicator('chat-container');
-    const response = await window.getGeminiResponse(
-        currentTopic, userProgress?.level || 'Voter', null, []
-    );
-    window.removeTypingIndicator();
+    try {
+        State.isProcessing = true;
+        window.showTypingIndicator('chat-container');
 
-    window.appendMessage('chat-container', response, 'bot');
-    chatHistory.push({ role: 'bot', text: response });
-});
+        const response = await window.getGeminiResponse(
+            topic,
+            State.userProgress.level,
+            null,
+            []
+        );
 
-// ── Back to Dashboard ──────────────────────────────────────────────────────────
-
-backToDashboardBtn.addEventListener('click', async () => {
-    // Track topic completion if meaningful conversation happened
-    if (chatHistory.length > 2 && currentUser) {
-        if (typeof window.trackTopicComplete === 'function') {
-            window.trackTopicComplete(currentTopic, chatHistory.length);
-        }
-        userProgress.topicsCompleted = (userProgress.topicsCompleted || 0) + 1;
-        topicsCompleted.textContent  = userProgress.topicsCompleted;
-        await window.saveUserProgress(currentUser.uid, userProgress);
-        if (typeof window.showToast === 'function') {
-            window.showToast(`"${currentTopic}" session complete! 🗳️`, 'success');
-        }
+        window.removeTypingIndicator();
+        window.appendMessage('chat-container', response, 'bot');
+        State.chatHistory.push({ role: 'bot', text: response });
+    } catch (error) {
+        window.removeTypingIndicator();
+        window.showToast('Failed to start session.', 'error');
+    } finally {
+        State.isProcessing = false;
     }
-    window.showSection('dashboard-section');
-});
-
-// ── Send Chat Message ──────────────────────────────────────────────────────────
-
-const handleSendMessage = async () => {
-    const text = userResponse.value.trim();
-    if (!text || sendMsgBtn.disabled) return;
-
-    // Render user message immediately
-    window.appendMessage('chat-container', text, 'user');
-    userResponse.value    = '';
-    sendMsgBtn.disabled   = true;
-
-    // Track message sent
-    if (typeof window.trackMessage === 'function') {
-        window.trackMessage(currentTopic);
-    }
-
-    // Show typing indicator while waiting
-    window.showTypingIndicator('chat-container');
-
-    const response = await window.getGeminiResponse(
-        currentTopic, userProgress?.level || 'Voter', text, chatHistory
-    );
-
-    window.removeTypingIndicator();
-    window.appendMessage('chat-container', response, 'bot');
-
-    // Persist conversation turns for multi-turn context
-    chatHistory.push({ role: 'user', text });
-    chatHistory.push({ role: 'bot',  text: response });
-
-    sendMsgBtn.disabled = false;
-    userResponse.focus();
 };
 
-// Send on button click
-sendMsgBtn.addEventListener('click', handleSendMessage);
+/**
+ * Processes a user message and fetches an AI response.
+ */
+const onSendMessage = async () => {
+    const text = DOM.userResponse.value.trim();
+    if (!text || State.isProcessing) {
+        return;
+    }
 
-// Send on Enter (without Shift for newline)
-userResponse.addEventListener('keypress', (e) => {
+    DOM.userResponse.value = '';
+    DOM.sendMsgBtn.disabled = true;
+    window.appendMessage('chat-container', text, 'user');
+
+    if (typeof window.trackMessage === 'function') {
+        window.trackMessage(State.currentTopic);
+    }
+
+    try {
+        State.isProcessing = true;
+        window.showTypingIndicator('chat-container');
+
+        const response = await window.getGeminiResponse(
+            State.currentTopic,
+            State.userProgress.level,
+            text,
+            State.chatHistory
+        );
+
+        window.removeTypingIndicator();
+        window.appendMessage('chat-container', response, 'bot');
+
+        // Update history for context
+        State.chatHistory.push({ role: 'user', text });
+        State.chatHistory.push({ role: 'bot', text: response });
+    } catch (error) {
+        window.removeTypingIndicator();
+        window.showToast('Failed to get response.', 'error');
+    } finally {
+        State.isProcessing = false;
+        DOM.sendMsgBtn.disabled = false;
+        DOM.userResponse.focus();
+    }
+};
+
+DOM.startLearningBtn?.addEventListener('click', onStartSession);
+DOM.sendMsgBtn?.addEventListener('click', onSendMessage);
+DOM.userResponse?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        handleSendMessage();
+        onSendMessage();
     }
+});
+
+DOM.backToDashboardBtn?.addEventListener('click', async () => {
+    // If user engaged significantly, increment progress
+    if (State.chatHistory.length >= 3) {
+        if (typeof window.trackTopicComplete === 'function') {
+            window.trackTopicComplete(State.currentTopic, State.chatHistory.length);
+        }
+
+        State.userProgress.topicsCompleted += 1;
+        DOM.topicsCompleted.textContent = State.userProgress.topicsCompleted;
+        await window.saveUserProgress(State.currentUser.uid, State.userProgress);
+        window.showToast('Session progress saved!', 'success');
+    }
+    window.showSection('dashboard-section');
 });

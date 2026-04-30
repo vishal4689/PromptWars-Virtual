@@ -196,7 +196,12 @@ button {
     border-radius: 12px;
     cursor: pointer;
     border: none;
-    transition: all 0.25s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+button:focus-visible {
+    box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.5);
 }
 
 button:disabled {
@@ -219,20 +224,25 @@ button:disabled {
 .primary-btn:active:not(:disabled) { transform: translateY(0); }
 
 .secondary-btn {
-    background: transparent;
-    border: 1px solid var(--accent-color);
-    color: var(--accent-color);
+    background: rgba(16, 185, 129, 0.1);
+    border: 2px solid var(--accent-color);
+    color: #34d399; /* Higher contrast green */
 }
 
 .secondary-btn:hover:not(:disabled) {
-    background: rgba(16,185,129,0.12);
+    background: rgba(16,185,129,0.2);
     transform: translateY(-1px);
 }
 
-.text-btn { background: transparent; color: var(--text-muted); padding: 8px 16px; }
-.text-btn:hover { color: var(--text-main); }
+.text-btn { background: transparent; color: var(--text-muted); padding: 8px 16px; border-radius: 8px; }
+.text-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
 
-.icon-btn { background: rgba(255,255,255,0.08); color: var(--text-main); padding: 8px 16px; border-radius: 8px; }
+.icon-btn { 
+    background: rgba(255,255,255,0.08); 
+    color: var(--text-main); 
+    padding: 10px 18px; 
+    border-radius: 10px; 
+}
 .icon-btn:hover { background: rgba(255,255,255,0.16); }
 
 .error-msg  { color: var(--error);  font-size: 0.875rem; min-height: 20px; }
@@ -368,11 +378,22 @@ button:disabled {
     border-bottom-right-radius: 4px;
 }
 
-.message strong { color: #60a5fa; }
-.message p { margin-bottom: 8px; }
+.message strong { color: #60a5fa; font-weight: 700; }
+.message em { color: #f0f4f8; font-style: italic; opacity: 0.9; }
+.message p { margin-bottom: 10px; }
 .message p:last-child { margin-bottom: 0; }
-.message ul, .message ol { margin-left: 20px; margin-bottom: 8px; }
-.message li { margin-bottom: 4px; }
+.message ul, .message ol { margin-left: 24px; margin-bottom: 12px; }
+.message li { margin-bottom: 6px; }
+
+.inline-code {
+    background: rgba(0, 0, 0, 0.3);
+    color: #60a5fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.9em;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
 
 .input-area { display: flex; gap: 12px; align-items: flex-end; flex-shrink: 0; }
 .input-area button { height: 58px; padding: 0 28px; white-space: nowrap; }

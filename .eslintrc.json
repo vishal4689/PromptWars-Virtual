@@ -10,7 +10,19 @@
     "sourceType": "module"
   },
   "rules": {
+    "indent": ["error", 4],
+    "linebreak-style": ["error", "windows"],
+    "quotes": ["error", "single"],
+    "semi": ["error", "always"],
     "no-unused-vars": "warn",
-    "no-console": "off"
+    "no-console": "off",
+    "eqeqeq": "error",
+    "curly": "error",
+    "no-multi-spaces": "error",
+    "no-trailing-spaces": "error",
+    "space-before-blocks": "error",
+    "keyword-spacing": "error",
+    "comma-spacing": "error",
+    "arrow-spacing": "error"
   }
 }

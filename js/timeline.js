@@ -1,112 +1,125 @@
 /**
- * timeline.js — Static election process timeline data for CivicVote.
+ * timeline.js — Static Election Process Timeline Data for CivicVote.
  *
- * Provides structured, factual data about key election milestones used to
- * enrich the Gemini AI prompts and render an informational reference timeline.
- * This module has zero external dependencies.
+ * This module provides canonical, non-partisan data about the U.S. election lifecycle.
+ * Used to inform the AI assistant and populate reference UI components.
+ *
+ * @module timeline
+ */
+
+'use strict';
+
+/**
+ * @typedef {Object} TimelineStep
+ * @property {string} id - Unique identifier for the step.
+ * @property {string} phase - Human-readable name of the election phase.
+ * @property {string} timeframe - Typical calendar period for this phase.
+ * @property {string} icon - Emoji representing the phase.
+ * @property {string} description - Detailed explanation of the process.
+ * @property {string[]} actions - Key steps voters should take during this phase.
  */
 
 /**
- * Canonical election timeline steps for U.S. general elections.
- * Each step includes a typical time reference and key actions.
- * @type {Array<{id: string, phase: string, timeframe: string, description: string, actions: string[]}>}
+ * Canonical election timeline steps for U.S. General Elections.
+ * @type {TimelineStep[]}
  */
 window.ELECTION_TIMELINE = [
     {
         id: 'registration',
-        phase: 'Voter Registration',
-        timeframe: '15–30 days before Election Day',
+        phase: 'Voter Registration & Verification',
+        timeframe: 'Year-round; deadlines typically 15–30 days before Election Day',
         icon: '📋',
-        description: 'Citizens must register to vote. Deadlines vary by state — some allow same-day registration.',
+        description: 'The foundation of the election process. Citizens must establish their eligibility by registering with their state or local election board.',
         actions: [
-            'Check your state\'s registration deadline at vote.gov',
+            'Check registration status at vote.gov',
             'Register online, by mail, or in person',
-            'Verify your registration status before the deadline',
-            'Update your address if you have moved'
+            'Update address/name if you have moved or changed names',
+            'Verify identification requirements for your specific state'
         ]
     },
     {
         id: 'early-voting',
-        phase: 'Early Voting',
-        timeframe: '1–45 days before Election Day (varies by state)',
+        phase: 'Early In-Person Voting',
+        timeframe: '1–45 days before Election Day (varies significantly by state)',
         icon: '🗓️',
-        description: 'Many states allow voters to cast ballots before Election Day at designated polling locations.',
+        description: 'A process allowing voters to cast their ballots in person before the official Election Day at designated early voting centers.',
         actions: [
-            'Check if your state offers early voting',
-            'Find early voting locations and hours at usa.gov',
-            'Bring required ID documents',
-            'Votes are secured and counted on or after Election Day'
+            'Locate early voting sites in your county',
+            'Check hours of operation (often different from Election Day)',
+            'Bring required voter ID as per state law',
+            'Understand that early votes are stored securely until counting begins'
         ]
     },
     {
         id: 'mail-voting',
-        phase: 'Mail-In / Absentee Voting',
-        timeframe: 'Request by state deadline; return by Election Day',
+        phase: 'Mail-In & Absentee Balloting',
+        timeframe: 'Ballots typically mailed 30–45 days before Election Day',
         icon: '✉️',
-        description: 'Eligible voters can request a mail-in ballot. Rules for who qualifies vary by state.',
+        description: 'A method where ballots are sent to voters and returned via mail or secure drop box. Rules for "no-excuse" vs. "excuse-required" vary by state.',
         actions: [
-            'Request your absentee ballot by your state\'s deadline',
-            'Follow all instructions — sign the envelope if required',
-            'Track your ballot status online in most states',
-            'Return by mail or drop box before the deadline'
+            'Request a mail-in ballot by your state\'s specific deadline',
+            'Follow instructions exactly (e.g., use the provided security envelope)',
+            'Sign the outside of the return envelope as required',
+            'Track your ballot status through your state election portal'
         ]
     },
     {
         id: 'election-day',
-        phase: 'Election Day',
-        timeframe: 'First Tuesday after the first Monday in November',
+        phase: 'General Election Day',
+        timeframe: 'The first Tuesday after the first Monday in November',
         icon: '🗳️',
-        description: 'Official Election Day. In-person polling places are open for all registered voters.',
+        description: 'The final day for in-person voting. Polls are open for a set window (e.g., 7 AM to 8 PM) for all registered voters.',
         actions: [
-            'Find your polling place at vote.gov',
-            'Bring required ID (varies by state)',
-            'Polls are typically open 7 AM – 8 PM (check your state)',
-            'You have the right to a provisional ballot if your eligibility is questioned'
+            'Confirm your specific polling location at vote.org',
+            'Stay in line: If you are in line when polls close, you have the right to vote',
+            'Request a provisional ballot if your name is not on the rolls',
+            'Know your rights regarding voter assistance or language support'
         ]
     },
     {
-        id: 'vote-counting',
-        phase: 'Vote Counting & Certification',
-        timeframe: 'Election night through several weeks after',
+        id: 'counting',
+        phase: 'Canvassing & Vote Certification',
+        timeframe: 'Election Night through several weeks post-election',
         icon: '📊',
-        description: 'Votes are counted by local election officials and results are certified by the state.',
+        description: 'The legal process of counting every valid ballot (including mail-in, military, and provisional) and certifying the results at local and state levels.',
         actions: [
-            'Preliminary results reported on election night',
-            'Mail-in and provisional ballots counted in the days following',
-            'State canvassing boards certify results (typically 2–4 weeks later)',
-            'Results are publicly auditable'
+            'Understand that "unofficial results" on election night are projections',
+            'Observe the canvassing process (publicly transparent in most jurisdictions)',
+            'Learn about the certification deadlines for your state',
+            'Monitor potential audits or recounts if margins are within legal triggers'
         ]
     },
     {
-        id: 'inauguration',
-        phase: 'Inauguration / Swearing-In',
-        timeframe: 'January 20 (Presidential), varies for other offices',
+        id: 'swearing-in',
+        phase: 'Electoral College & Inauguration',
+        timeframe: 'December (Electoral College) and January (Inauguration)',
         icon: '🏛️',
-        description: 'Elected officials are sworn into office and begin their terms.',
+        description: 'The final constitutional steps for Presidential elections, or the swearing-in of state and local officials as per their charters.',
         actions: [
-            'Presidential inauguration is January 20th following the election',
-            'State and local officials follow their own swearing-in schedules',
-            'The peaceful transfer of power is a cornerstone of democracy'
+            'Learn how electors are chosen and how they cast their votes',
+            'Follow the Congressional certification of electoral votes (Jan 6th)',
+            'Inauguration Day marks the official start of the new term',
+            'The peaceful transfer of power is the cornerstone of the civic process'
         ]
     }
 ];
 
 /**
- * Returns the timeline step object for a given phase ID.
- * @param {string} id - The step ID (e.g., 'registration').
- * @returns {Object|undefined} The matching timeline step, or undefined.
+ * Retrieves a specific timeline step by its unique ID.
+ * @param {string} id - The ID of the step to retrieve.
+ * @returns {TimelineStep|undefined} The matching step or undefined if not found.
  */
 window.getTimelineStep = (id) => {
-    return window.ELECTION_TIMELINE.find(step => step.id === id);
+    return window.ELECTION_TIMELINE.find((step) => step.id === id);
 };
 
 /**
- * Returns a formatted summary of all timeline steps for injection into
- * the Gemini system prompt as additional context.
- * @returns {string} A markdown-formatted timeline summary.
+ * Generates a markdown-formatted summary of the entire election lifecycle.
+ * Often used to provide factual context to the AI assistant.
+ * @returns {string} Markdown summary of all steps.
  */
 window.getTimelineSummary = () => {
     return window.ELECTION_TIMELINE
-        .map(step => `${step.icon} **${step.phase}** (${step.timeframe}): ${step.description}`)
-        .join('\n');
+        .map((step) => `${step.icon} **${step.phase}**: ${step.description}`)
+        .join('\n\n');
 };

@@ -7,32 +7,36 @@
       "**/node_modules/**",
       "Dockerfile",
       "cloudbuild.yaml",
-      "tests/**"
+      "tests/**",
+      "package-lock.json",
+      "package.json",
+      ".gitignore",
+      ".eslintrc.json",
+      "nginx.conf",
+      ".dockerignore"
     ],
     "headers": [
       {
-        "source": "**/*.@(js|css)",
+        "source": "**/*.@(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)",
         "headers": [
-          { "key": "Cache-Control", "value": "max-age=7200" }
+          { "key": "Cache-Control", "value": "max-age=31536000, immutable" }
         ]
       },
       {
         "source": "**",
         "headers": [
-          { "key": "X-Content-Type-Options",   "value": "nosniff" },
-          { "key": "X-Frame-Options",           "value": "DENY" },
-          { "key": "X-XSS-Protection",          "value": "1; mode=block" },
-          { "key": "Referrer-Policy",           "value": "strict-origin-when-cross-origin" },
-          { "key": "Permissions-Policy",        "value": "geolocation=(), microphone=(), camera=()" },
-          { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" }
+          { "key": "X-Content-Type-Options", "value": "nosniff" },
+          { "key": "X-Frame-Options", "value": "DENY" },
+          { "key": "X-XSS-Protection", "value": "1; mode=block" },
+          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+          { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=()" },
+          { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
+          { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.googleusercontent.com; connect-src 'self' https://www.google-analytics.com https://generativelanguage.googleapis.com https://*.firebaseio.com https://*.googleapis.com https://*.cloudfunctions.net;" }
         ]
       }
     ],
     "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
+      { "source": "**", "destination": "/index.html" }
     ]
   }
 }
