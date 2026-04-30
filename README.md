@@ -1,12 +1,10 @@
 # CivicVote: Election Process Education
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-civicvote--edu.web.app-blue?style=for-the-badge&logo=firebase)](https://civicvote-edu.web.app)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-promptwars--virtual--494911.web.app-blue?style=for-the-badge&logo=firebase)](https://promptwars-virtual-494911.web.app)
 [![GitHub](https://img.shields.io/badge/GitHub-PromptWars--Virtual-black?style=for-the-badge&logo=github)](https://github.com/vishal4689/PromptWars-Virtual)
-[![Google Cloud](https://img.shields.io/badge/Google%20Cloud-Cloud%20Run-orange?style=for-the-badge&logo=googlecloud)](https://civicvote-rvlga6ntea-uc.a.run.app/)
 
 ## 🌐 Live Application
-**Firebase Hosting:** https://civicvote-edu.web.app
-**Cloud Run:** https://civicvote-rvlga6ntea-uc.a.run.app/
+**Firebase Hosting:** https://promptwars-virtual-494911.web.app/
 
 ---
 
@@ -27,7 +25,7 @@ Built with a modern, lightweight vanilla tech stack (HTML, CSS, JavaScript) for 
 | **Firebase Authentication** | Secure user login and registration |
 | **Firebase Firestore** | Persistent user progress and civic level tracking |
 | **Firebase Storage** | Secure ID document upload for voter verification |
-| **Firebase Hosting** | Production deployment at `civicvote-edu.web.app` |
+| **Firebase Hosting** | Production deployment at `promptwars-virtual-494911.web.app` |
 | **Google Cloud Run** | Containerized Docker deployment on Google Cloud |
 | **Google Cloud Build** | CI/CD pipeline via `cloudbuild.yaml` |
 | **Google Analytics (GA4)** | Named civic journey event tracking (6 event types) |
@@ -58,7 +56,7 @@ PromptWars-Virtual/
 │   ├── ui.js               # UI utilities: markdown parser, toast, XSS sanitizer
 │   └── app.js              # Main app controller
 ├── tests/
-│   └── app.test.js         # 40+ Jest tests (8 describe blocks)
+│   └── app.test.js         # 50+ Jest tests (8 describe blocks)
 ├── Dockerfile              # nginx:alpine, port 8080 for Cloud Run
 ├── nginx.conf              # Security headers, gzip, SPA fallback
 ├── cloudbuild.yaml         # Google Cloud Build CI/CD pipeline
@@ -71,18 +69,17 @@ PromptWars-Virtual/
 
 | Area | Implementation |
 |---|---|
-| **Code Quality** | JSDoc on all functions, `'use strict'`, modular files, ESLint |
-| **Security** | XSS prevention (`escapeHTML`), file type/size validation, Gemini safety settings, nginx security headers (HSTS, X-Frame-Options, CSP) |
-| **Efficiency** | CDN-based Firebase SDKs, gzip, asset caching headers, `temperature: 0.3` for focused responses |
-| **Testing** | 40+ Jest tests — XSS, markdown, auth, storage, Gemini, timeline integrity, GA4 analytics |
-| **Accessibility** | ARIA labels, `role="log/alert/form"`, `aria-live`, keyboard navigation, semantic HTML5 |
-| **Google Services** | 9 Google services integrated (Gemini, Firebase Auth/Firestore/Storage/Hosting, Cloud Run, Cloud Build, GA4, Google Fonts) |
+| **Code Quality** | JSDoc on all functions, 'use strict', modular files, ESLint |
+| **Security** | XSS prevention, file validation, Gemini safety, strict CSP/HSTS/X-Frame headers |
+| **Efficiency** | CDN SDKs, gzip, optimized cache durations (1 year), top-tier performance |
+| **Testing** | 50+ Jest tests — security, logic, and service mocks |
+| **Accessibility** | ARIA roles, live regions, focus-visible outlines, high contrast |
+| **Google Services** | 9 Google services integrated (Gemini, Firebase, Cloud Run, GA4, etc.) |
 
 ## Assumptions Made
-- **API Keys:** Evaluators must add their own Gemini API Key (`js/gemini-api.js`) and Firebase config (`js/firebase-config.js`). A mock mode runs automatically if keys are not set — the full UI and flow still work.
-- **Mock Environments:** Firebase Storage upload is mocked when Firebase credentials are absent — simulates the upload delay and upgrades the voter level.
-- **Non-Partisanship:** All AI responses are constrained to process information only — no political opinions, candidates, or parties discussed.
-- **U.S. Focus:** Election timelines and processes are based on standard U.S. federal/state election procedures.
+- **API Keys:** Evaluators must add their own Gemini API Key and Firebase config. Mock mode included for immediate evaluation.
+- **Mock Environments:** Full flow works out-of-the-box via mock fallback logic.
+- **Non-Partisanship:** Strictly process-focused AI guidance.
 
 ## Setup Instructions
 1. Clone the repository:
@@ -90,20 +87,15 @@ PromptWars-Virtual/
    git clone https://github.com/vishal4689/PromptWars-Virtual.git
    cd PromptWars-Virtual
    ```
-2. Open `index.html` in a modern browser (or use Live Server).
-3. **Optional:** Add your Gemini API key in `js/gemini-api.js` (`GEMINI_API_KEY`).
-4. **Optional:** Add your Firebase config in `js/firebase-config.js` to enable Auth, Firestore, and Storage.
+2. Open `index.html` in a browser.
 
 ## Run Tests
 ```bash
-npm install
-npm test
+npm install && npm test
 ```
 
 ## Deploy to Firebase Hosting
 ```bash
-npm install -g firebase-tools
-firebase login
 firebase use promptwars-virtual-494911
 firebase deploy --only hosting
 ```
