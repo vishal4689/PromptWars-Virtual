@@ -1,7 +1,7 @@
 {
-  "name": "learnnova",
+  "name": "civicvote",
   "version": "1.0.0",
-  "description": "LearnNova Personalized AI Tutor",
+  "description": "CivicVote Election Process Education Assistant",
   "main": "js/app.js",
   "scripts": {
     "test": "jest",
