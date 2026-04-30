@@ -1,13 +1,36 @@
 steps:
-  # Build the container image
+  # Step 1 — Build the Docker container image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/learnnova', '.']
-  # Push the container image to Container Registry
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/civicvote'
+      - '.'
+
+  # Step 2 — Push to Google Container Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/learnnova']
-  # Deploy to Cloud Run
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/civicvote'
+
+  # Step 3 — Deploy to Google Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
-    args: ['run', 'deploy', 'learnnova', '--image', 'gcr.io/$PROJECT_ID/learnnova', '--region', 'us-central1', '--platform', 'managed', '--allow-unauthenticated']
+    args:
+      - 'run'
+      - 'deploy'
+      - 'civicvote'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/civicvote'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '256Mi'
+      - '--min-instances'
+      - '0'
+
 images:
-  - gcr.io/$PROJECT_ID/learnnova
+  - 'gcr.io/$PROJECT_ID/civicvote'

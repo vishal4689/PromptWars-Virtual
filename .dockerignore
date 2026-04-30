@@ -1,0 +1,26 @@
+# CivicVote — .dockerignore
+# Prevents sensitive/unnecessary files from being copied into the Docker image
+
+# Git metadata
+.git
+.gitignore
+
+# Node / dev dependencies
+node_modules
+npm-debug.log
+
+# Test files (not needed in production image)
+tests/
+
+# Firebase deployment metadata (not part of the served app)
+.firebaserc
+firebase.json
+
+# Build/CI configs
+cloudbuild.yaml
+
+# Editor / OS files
+.vscode
+.idea
+*.DS_Store
+Thumbs.db
